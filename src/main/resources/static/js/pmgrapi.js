@@ -407,7 +407,7 @@ function list() {
 }
 
 // lista los usuarios activos (SOLO ADMIN)
-function list() {
+function ulist() {
     return go(serverApiUrl + serverToken + "/ulist", 'POST')
         .then(d => updateState(d));
 }
@@ -442,4 +442,7 @@ export {
 
   // Utilidades varias que no forman parte de la API
   Util,
+
+  // operaciones de administración (para configurar el servidor)
+  addUser, rmUser, setUser, ulist
 };

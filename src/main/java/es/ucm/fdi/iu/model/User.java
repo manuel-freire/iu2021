@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @NamedQueries({
         @NamedQuery(name="User.byUsername",
                 query="SELECT u FROM User u "
-                        + "WHERE u.username = :username"),
+                        + "WHERE u.username = :username AND u.enabled = 1"),
         @NamedQuery(name="User.hasUsername",
                 query="SELECT COUNT(u) "
                         + "FROM User u "
@@ -44,6 +44,7 @@ public class User implements Transferable<User.AdminTransfer> {
     @Column(nullable = false)
     private String password;
 
+    private boolean enabled;
     private String roles; // split by ',' to separate roles
 
     @OneToMany(mappedBy = "user", orphanRemoval = true)
@@ -70,7 +71,9 @@ public class User implements Transferable<User.AdminTransfer> {
     @Getter
     @AllArgsConstructor
     public static class AdminTransfer {
+        private long id;
         private String username;
+        private boolean enabled;
         private int tokens;
         private int jobs;
         private int printers;
@@ -88,7 +91,7 @@ public class User implements Transferable<User.AdminTransfer> {
 
     @Override
     public AdminTransfer toTransfer() {
-        return new AdminTransfer(username,
+        return new AdminTransfer(id, username, enabled,
                 tokens.size(), jobs.size(), printers.size(), groups.size());
     }
 

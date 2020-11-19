@@ -55,7 +55,7 @@ function createPrinterItem(printer) {
         </h2>
     </div>
 
-    <div id="${cid}" class="collapse show" aria-labelledby="${hid}
+    <div id="${cid}" class="collapse hide" aria-labelledby="${hid}
         data-parent="#accordionExample">
         <div class="card-body pcard">
             ${allJobs}
@@ -139,7 +139,7 @@ $(function() {
       // vaciamos un contenedor
       $("#accordionExample").empty();
       // y lo volvemos a rellenar con su nuevo contenido
-      Pmgr.globalState.printer.forEach(m =>  $("#accordionExample").append(createPrinterItem(m)));
+      Pmgr.globalState.printers.forEach(m =>  $("#accordionExample").append(createPrinterItem(m)));
       // y asi para cada cosa que pueda haber cambiado
     } catch (e) {
       console.log('Error actualizando', e);
@@ -148,7 +148,8 @@ $(function() {
 
 
   // Servidor a utilizar. También puedes lanzar tú el tuyo en local (instrucciones en Github)
-  Pmgr.connect("http://localhost:8080/api/");
+  const serverUrl = "http://localhost:8080/api/";
+  Pmgr.connect(serverUrl);
 
   // ejemplo de login
   Pmgr.login("HDY0IQ", "cMbwKQ").then(d => {
@@ -156,12 +157,14 @@ $(function() {
         const u = Gb.resolve("HDY0IQ");
         console.log("login ok!", u);
     } else {
-        console.log("error en login");
+        console.log(`error en login (revisa la URL: ${serverUrl}, y verifica que está vivo)`);
+        console.log("Generando datos de ejemplo para uso en local...")
+
+        populate();
+        update();
     }
   });
 });
-
-
 
 // cosas que exponemos para usarlas desde la consola
 window.populate = populate

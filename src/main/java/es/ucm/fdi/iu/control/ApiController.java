@@ -232,6 +232,7 @@ public class ApiController {
         }
 
         User o = new User();
+        o.setEnabled(true);
         o.setRoles("" + User.Role.USER);
         checkMandatory(data, "username",
                 d -> !d.isEmpty(), "cannot be empty",
@@ -257,13 +258,16 @@ public class ApiController {
             throw new ApiException("Only admins can do this", null);
         }
         if ( ! data.has("id") || ! data.get("id").canConvertToLong()) {
-            throw new ApiException("No ID for printer to set: " + data.get("id"), null);
+            throw new ApiException("No ID for user to set: " + data.get("id"), null);
         }
         User o = entityManager.find(User.class, data.get("id").asLong());
         if (o == null) {
             throw new ApiException("No such user: " + data.get("id"), null);
         }
 
+        checkOptional(data, "enabled",
+                d->("true".equals(d) || "false".equals(d)), "must be 'true' or 'false'",
+                d->o.setEnabled("true".equals(d)));
         checkOptional(data, "username",
                 d->!d.isEmpty(), "cannot be empty",
                 o::setUsername);
