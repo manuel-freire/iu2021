@@ -126,6 +126,32 @@ async function populate(minPrinters, maxPrinters, minGroups, maxGroups, jobCount
       }
 }
 
+/**
+ * En un div que contenga un campo de texto de búsqueda
+ * y un select, rellena el select con el resultado de la
+ * funcion actualizaElementos (que debe generar options), y hace que
+ * cualquier búsqueda filtre los options visibles.
+ */
+function activaBusquedaDropdown(div, actualizaElementos) {
+      let search = $(div).find('input[type=search]');
+      let select = $(div).find('select');
+      console.log(search, select);
+
+      // vacia el select, lo llena con impresoras validas
+      // FALTA: poner como marcadas las que ya estaban seleccionadas de antes
+      select.empty();
+      actualizaElementos(select);
+
+      // filtrado dinámico
+      $(search).on('input', () => {
+        let w = $(search).val().trim().toLowerCase();
+        let items = $(select).find("option");
+        console.log(items);
+        items.each((i, o) =>
+            $(o).text().toLowerCase().indexOf(w) > -1 ? $(o).show() : $(o).hide());
+      });
+}
+
 //
 // PARTE 2:
 // Código de pegamento, ejecutado sólo una vez que la interfaz esté cargada.
@@ -133,37 +159,42 @@ async function populate(minPrinters, maxPrinters, minGroups, maxGroups, jobCount
 //
 $(function() { 
   
-  // funcion de actualización de ejemplo. Llámala para refrescar interfaz
-  function update(result) {
-    try {
-      // vaciamos un contenedor
-      $("#accordionExample").empty();
-      // y lo volvemos a rellenar con su nuevo contenido
-      Pmgr.globalState.printers.forEach(m =>  $("#accordionExample").append(createPrinterItem(m)));
-      // y asi para cada cosa que pueda haber cambiado
-    } catch (e) {
-      console.log('Error actualizando', e);
+    // funcion de actualización de ejemplo. Llámala para refrescar interfaz
+    function update(result) {
+        try {
+          // vaciamos un contenedor
+          $("#accordionExample").empty();
+          // y lo volvemos a rellenar con su nuevo contenido
+          Pmgr.globalState.printers.forEach(m =>  $("#accordionExample").append(createPrinterItem(m)));
+          // y asi para cada cosa que pueda haber cambiado
+        } catch (e) {
+          console.log('Error actualizando', e);
+        }
     }
-  }
 
-
-  // Servidor a utilizar. También puedes lanzar tú el tuyo en local (instrucciones en Github)
-  const serverUrl = "http://localhost:8080/api/";
-  Pmgr.connect(serverUrl);
+    // Servidor a utilizar. También puedes lanzar tú el tuyo en local (instrucciones en Github)
+    const serverUrl = "http://localhost:8080/api/";
+    Pmgr.connect(serverUrl);
 
   // ejemplo de login
-  Pmgr.login("HDY0IQ", "cMbwKQ").then(d => {
-    if (d !== undefined) {
-        const u = Gb.resolve("HDY0IQ");
-        console.log("login ok!", u);
-    } else {
-        console.log(`error en login (revisa la URL: ${serverUrl}, y verifica que está vivo)`);
-        console.log("Generando datos de ejemplo para uso en local...")
+    Pmgr.login("HDY0IQ", "cMbwKQ").then(d => {
+        if (d !== undefined) {
+            const u = Gb.resolve("HDY0IQ");
+            console.log("login ok!", u);
+        } else {
+            console.log(`error en login (revisa la URL: ${serverUrl}, y verifica que está vivo)`);
+            console.log("Generando datos de ejemplo para uso en local...")
 
-        populate();
-        update();
-    }
-  });
+            populate();
+            update();
+
+            // convierte este campo de texto+dropdown en dinamicos mostrando impresoras
+            activaBusquedaDropdown($('#dropdownBuscableImpresora'),
+                  (select) => Pmgr.globalState.printers.forEach(m =>
+                            select.append(`<option value="${m.id}">${m.alias}</option>`))
+            );
+        }
+    });
 });
 
 // cosas que exponemos para usarlas desde la consola
