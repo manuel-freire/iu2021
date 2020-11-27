@@ -138,7 +138,6 @@ function activaBusquedaDropdown(div, actualizaElementos) {
       console.log(search, select);
 
       // vacia el select, lo llena con impresoras validas
-      // FALTA: poner como marcadas las que ya estaban seleccionadas de antes
       select.empty();
       actualizaElementos(select);
 
