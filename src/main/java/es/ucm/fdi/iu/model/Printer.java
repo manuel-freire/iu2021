@@ -25,7 +25,8 @@ import java.util.stream.Collectors;
 public class Printer implements Transferable<Printer.Transfer> {
 
     @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gen")
+    @SequenceGenerator(name = "gen", sequenceName = "gen")
 	private long id;
     @ManyToOne
     private User instance;
@@ -45,14 +46,14 @@ public class Printer implements Transferable<Printer.Transfer> {
 
     public enum Status {
         PRINTING,
-        OUT_OF_INK,
-        OUT_OF_PAPER,
+        NO_INK,
+        NO_PAPER,
         PAUSED
     }
 
     public Status currentStatus() {
-        if (paper == 0) return Status.OUT_OF_PAPER;
-        if (ink == 0) return Status.OUT_OF_INK;
+        if (paper == 0) return Status.NO_PAPER;
+        if (ink == 0) return Status.NO_INK;
         if (queue.isEmpty()) return Status.PAUSED;
         return Status.PRINTING;
     }

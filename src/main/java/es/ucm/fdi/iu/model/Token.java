@@ -16,7 +16,8 @@ import javax.persistence.*;
 public class Token {
 
     @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gen")
+    @SequenceGenerator(name = "gen", sequenceName = "gen")
 	private long id;
 
     private String key;

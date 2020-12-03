@@ -3,6 +3,7 @@ package es.ucm.fdi.iu.control;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import es.ucm.fdi.iu.model.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -18,6 +19,7 @@ import javax.transaction.Transactional;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -292,7 +294,7 @@ public class ApiController {
             throw new ApiException("Only admins can do this", null);
         }
         if ( ! data.has("id") || ! data.get("id").canConvertToLong()) {
-            throw new ApiException("No ID for printer to set: " + data.get("id"), null);
+            throw new ApiException("No ID for user to remove: " + data.get("id"), null);
         }
         User o = entityManager.find(User.class, data.get("id").asLong());
         if (o == null) {
@@ -332,9 +334,10 @@ public class ApiController {
                 p::setIp);
         if (data.has("queue") && data.get("queue").isArray()) {
             List<Job> nextJobs = new ArrayList<>();
-            for (JsonNode node : data.get("queue")) {
-                String id = node.textValue();
-                Job j = entityManager.find(Job.class, Long.parseLong(id));
+            Iterator<JsonNode> it = data.get("queue").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                Job j = entityManager.find(Job.class, id);
                 if (j == null || j.getInstance().getId() != u.getId()) {
                     throw new ApiException("No such job: " + id, null);
                 }
@@ -346,19 +349,20 @@ public class ApiController {
         }
 
         if (data.has("status")) {
+            String statusText = data.get("status").asText().toUpperCase();
             try {
-                switch (Printer.Status.valueOf(data.get("status").asText())) {
-                    case OUT_OF_INK:
-                        p.setInk(0);
-                    case OUT_OF_PAPER:
-                        p.setPaper(0);
+                switch (Printer.Status.valueOf(statusText)) {
+                    case NO_INK:
+                        p.setInk(0); break;
+                    case NO_PAPER:
+                        p.setPaper(0); break;
                     case PRINTING:
                     case PAUSED:
                         p.setInk(1);
-                        p.setPaper(1);
+                        p.setPaper(1); break;
                 }
             } catch (IllegalArgumentException iae) {
-                throw new ApiException("not a valid status", iae);
+                throw new ApiException("not a valid status: " + statusText, iae);
             }
         }
 
@@ -398,9 +402,10 @@ public class ApiController {
                 p::setIp);
         if (data.has("queue") && data.get("queue").isArray()) {
             List<Job> nextJobs = new ArrayList<>();
-            for (JsonNode node : data.get("queue")) {
-                String id = node.textValue();
-                Job j = entityManager.find(Job.class, Long.parseLong(id));
+            Iterator<JsonNode> it = data.get("queue").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                Job j = entityManager.find(Job.class, id);
                 if (j == null || j.getInstance().getId() != u.getId()) {
                     throw new ApiException("No such job: " + id, null);
                 }
@@ -409,6 +414,24 @@ public class ApiController {
             }
             p.getQueue().clear();
             p.getQueue().addAll(nextJobs);
+        }
+
+        if (data.has("status")) {
+            String statusText = data.get("status").asText().toUpperCase();
+            try {
+                switch (Printer.Status.valueOf(statusText)) {
+                    case NO_INK:
+                        p.setInk(0); break;
+                    case NO_PAPER:
+                        p.setPaper(0); break;
+                    case PRINTING:
+                    case PAUSED:
+                        p.setInk(1);
+                        p.setPaper(1); break;
+                }
+            } catch (IllegalArgumentException iae) {
+                throw new ApiException("not a valid status: " + statusText, iae);
+            }
         }
 
         entityManager.flush();
@@ -425,12 +448,15 @@ public class ApiController {
         User u = t.getUser();
 
         if ( ! data.has("id") || ! data.get("id").canConvertToLong()) {
-            throw new ApiException("No ID for printer to set: " + data.get("id"), null);
+            throw new ApiException("No ID for printer to remove: " + data.get("id"), null);
         }
 
         Printer p = entityManager.find(Printer.class, data.get("id").asLong());
         if (p == null || p.getInstance().getId() != u.getId()) {
             throw new ApiException("No such printer: " + data.get("id"), null);
+        }
+        for (PGroup g : p.getGroups()) {
+            g.getPrinters().remove(p);
         }
         entityManager.remove(p);
         entityManager.flush();
@@ -454,9 +480,10 @@ public class ApiController {
                 g::setName);
         if (data.has("printers") && data.get("printers").isArray()) {
             List<Printer> nextPrinters = new ArrayList<>();
-            for (JsonNode node : data.get("printers")) {
-                String id = node.textValue();
-                Printer p = entityManager.find(Printer.class, Long.parseLong(id));
+            Iterator<JsonNode> it = data.get("printers").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                Printer p = entityManager.find(Printer.class, id);
                 if (p == null || p.getInstance().getId() != u.getId()) {
                     throw new ApiException("No such printer: " + id, null);
                 }
@@ -493,9 +520,10 @@ public class ApiController {
                 g::setName);
         if (data.has("printers") && data.get("printers").isArray()) {
             List<Printer> nextPrinters = new ArrayList<>();
-            for (JsonNode node : data.get("printers")) {
-                String id = node.textValue();
-                Printer p = entityManager.find(Printer.class, Long.parseLong(id));
+            Iterator<JsonNode> it = data.get("printers").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                Printer p = entityManager.find(Printer.class, id);
                 if (p == null || p.getInstance().getId() != u.getId()) {
                     throw new ApiException("No such printer: " + id, null);
                 }
@@ -519,7 +547,7 @@ public class ApiController {
         User u = t.getUser();
 
         if ( ! data.has("id") || ! data.get("id").canConvertToLong()) {
-            throw new ApiException("No ID for group to set: " + data.get("id"), null);
+            throw new ApiException("No ID for group to remove: " + data.get("id"), null);
         }
 
         PGroup g = entityManager.find(PGroup.class, data.get("id").asLong());
@@ -546,7 +574,7 @@ public class ApiController {
         Job j = new Job();
         j.setInstance(u);
 
-        checkMandatory(data, "filename",
+        checkMandatory(data, "fileName",
                 d->d.endsWith(".pdf"), "cannot be empty or non-pdf",
                 j::setFileName);
         String pid = checkMandatory(data, "printer",
@@ -585,7 +613,7 @@ public class ApiController {
             throw new ApiException("No such job: " + jid, null);
         }
 
-        checkOptional(data, "filename",
+        checkOptional(data, "fileName",
                 d->d.endsWith(".pdf"), "cannot be empty or non-pdf",
                 j::setFileName);
         String pid = checkOptional(data, "printer",

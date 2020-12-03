@@ -18,7 +18,8 @@ import lombok.*;
 public class Job implements Transferable<Job.Transfer> {
 
     @Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gen")
+    @SequenceGenerator(name = "gen", sequenceName = "gen")
 	private long id;
     @ManyToOne
     private User instance;
