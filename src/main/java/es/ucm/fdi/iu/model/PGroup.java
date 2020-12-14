@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 @Entity
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class PGroup implements Transferable<PGroup.Transfer> {
 
     @Id
