@@ -154,8 +154,8 @@ function update(result) {
 $(function() {
 
     // Servidor a utilizar. También puedes lanzar tú el tuyo en local (instrucciones en Github)
-//    const serverUrl = "http://gin.fdi.ucm.es/iu/api/";
     const serverUrl = "http://localhost:8080/api/";
+//    const serverUrl = "http://gin.fdi.ucm.es/iu/api/";
     Pmgr.connect(serverUrl);
 
   // ejemplo de login
@@ -175,6 +175,7 @@ $(function() {
 });
 
 // cosas que exponemos para usarlas desde la consola
+window.update = update;
 window.Pmgr = Pmgr;
 window.createPrinterItem = createPrinterItem
 

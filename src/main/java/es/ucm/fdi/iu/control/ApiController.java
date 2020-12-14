@@ -17,10 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
@@ -366,6 +363,21 @@ public class ApiController {
             }
         }
 
+        if (data.has("groups") && data.get("groups").isArray()) {
+            Iterator<JsonNode> it = data.get("groups").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                PGroup g = entityManager.find(PGroup.class, id);
+                if (g == null || g.getInstance().getId() != u.getId()) {
+                    throw new ApiException("No such group: " + id, null);
+                }
+                if ( ! p.getGroups().contains(g)) {
+                    p.getGroups().add(g);
+                    g.getPrinters().add(p);
+                }
+            }
+        }
+
         entityManager.persist(p);
         entityManager.flush();
         return u.toTransfer(t.getKey());
@@ -400,6 +412,7 @@ public class ApiController {
         checkOptional(data, "ip",
                 ApiController::isValidIp, "is not a valid IP",
                 p::setIp);
+
         if (data.has("queue") && data.get("queue").isArray()) {
             List<Job> nextJobs = new ArrayList<>();
             Iterator<JsonNode> it = data.get("queue").elements();
@@ -414,6 +427,36 @@ public class ApiController {
             }
             p.getQueue().clear();
             p.getQueue().addAll(nextJobs);
+        }
+
+        if (data.has("groups") && data.get("groups").isArray()) {
+            Set<PGroup> nextGroups = new HashSet<>();
+            Iterator<JsonNode> it = data.get("groups").elements();
+            while (it.hasNext()) {
+                long id = it.next().asLong();
+                PGroup g = entityManager.find(PGroup.class, id);
+                if (g == null || g.getInstance().getId() != u.getId()) {
+                    throw new ApiException("No such group: " + id, null);
+                }
+                nextGroups.add(g);
+            }
+
+            // remove from groups where it was before, but is now no longer
+            Set<PGroup> groupsToRemoveFrom = new HashSet<>(p.getGroups());
+            groupsToRemoveFrom.removeAll(nextGroups);
+
+            // add to groups where it should be, but was not there before
+            Set<PGroup> groupsToAddTo = new HashSet<>(nextGroups);
+            groupsToAddTo.removeAll(p.getGroups());
+
+            for (PGroup g: groupsToRemoveFrom) {
+                p.getGroups().remove(g);
+                g.getPrinters().remove(p);
+            }
+            for (PGroup g: groupsToAddTo) {
+                p.getGroups().add(g);
+                g.getPrinters().add(p);
+            }
         }
 
         if (data.has("status")) {

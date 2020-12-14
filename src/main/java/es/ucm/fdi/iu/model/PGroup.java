@@ -1,9 +1,6 @@
 package es.ucm.fdi.iu.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import java.util.ArrayList;
@@ -19,11 +16,13 @@ import java.util.stream.Collectors;
 @Entity
 @Data
 @NoArgsConstructor
+@EqualsAndHashCode
 public class PGroup implements Transferable<PGroup.Transfer> {
 
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "gen")
     @SequenceGenerator(name = "gen", sequenceName = "gen")
+    @EqualsAndHashCode.Include
 	private long id;
     @ManyToOne
     private User instance;

@@ -66,15 +66,18 @@ public class Printer implements Transferable<Printer.Transfer> {
         private String model;
         private String location;
         private String ip;
+        private List<Long> groups;
         private List<Long> queue;
         private Status status;
     }
 
     @Override
     public Transfer toTransfer() {
+        List<Long> gs = groups.stream().map(PGroup::getId)
+                .collect(Collectors.toList());
         List<Long> qs = queue.stream().map(Job::getId)
                 .collect(Collectors.toList());
         return new Transfer(
-                id, alias, model, location, ip, qs, currentStatus());
+                id, alias, model, location, ip, gs, qs, currentStatus());
     }
 }
